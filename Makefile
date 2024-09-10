@@ -13,6 +13,10 @@ build:
 run:
 	@go run cmd/api/main.go
 
+# Migrate models
+migrate-db:
+	@go run cmd/migrate.go
+
 
 # Create DB container
 docker-run:
