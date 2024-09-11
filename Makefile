@@ -7,7 +7,7 @@ build:
 	@echo "Building..."
 	
 	
-	@go build -o main cmd/api/main.go
+	@go build -tags netgo -ldflags '-s -w' -o app cmd/api/main.go
 
 # Run the application
 run:
