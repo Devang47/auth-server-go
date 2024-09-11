@@ -29,7 +29,7 @@ func SetupREST(db *gorm.DB) REST {
 	}
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("/"))
+		w.Write([]byte("auth-server-go"))
 	})
 
 	// Health check
