@@ -12,17 +12,21 @@ import (
 
 type Claims struct {
 	AccountID string `json:"accountId"`
-	ExpiresAt int64  `json:"exp,omitempty"`
-	jwt.Claims
+	jwt.RegisteredClaims
 }
 
 const accountIDKey string = "accountId"
 
 func GenerateToken(accountID string) (string, error) {
 	claims := Claims{
-		AccountID: accountID,
-		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+		accountID,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "auth-server-go",
+		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("JWT_SIGNING_KEY")))
 }
