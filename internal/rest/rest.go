@@ -41,7 +41,7 @@ func SetupREST(db *gorm.DB) REST {
 	secureRoutes.Use(middlewares.ProtectHandler)
 
 	AddGoogleAuthRoutes(rest, public)
-	AddAccountRoutes(rest, public)
+	AddAccountRoutes(rest, public, secureRoutes)
 
 	return rest
 }

@@ -32,15 +32,15 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tokenString, err := middlewares.GenerateToken(user.UserID)
+	account := models.Account{}
+
+	userId, err := gonanoid.New()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	account := models.Account{}
-
-	userId, err := gonanoid.New()
+	tokenString, err := middlewares.GenerateToken(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
