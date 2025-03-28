@@ -19,7 +19,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupTestDB creates a new test database with a unique test account for each test
 func setupTestDB(t *testing.T, userIDSuffix string) *gorm.DB {
 	// Use in-memory SQLite with a unique identifier to prevent sharing between tests
 	dbName := fmt.Sprintf("file::memory:?cache=shared&_uuid=%d", time.Now().UnixNano())
