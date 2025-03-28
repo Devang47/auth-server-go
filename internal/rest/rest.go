@@ -3,9 +3,12 @@ package rest
 import (
 	"auth-server-go/internal/middlewares"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
+
 	"github.com/go-chi/render"
 	"gorm.io/gorm"
 )
@@ -22,6 +25,7 @@ func SetupREST(db *gorm.DB) REST {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	router.Use(render.SetContentType(render.ContentTypeJSON))
+	router.Use(httprate.LimitByIP(100, time.Minute))
 
 	rest := REST{
 		DB:     db,
