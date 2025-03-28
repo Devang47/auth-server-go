@@ -13,5 +13,5 @@ type Account struct {
 	Provider     string `gorm:"type:text" json:"provider"`
 	CreatedAt    int64  `json:"createdAt"`
 	LastLoggedIn int64  `json:"lastLoggedIn"`
-	Picture      string `gorm:"type:text" json:"pictucre"`
+	Picture      string `gorm:"type:text" json:"picture"`
 }
