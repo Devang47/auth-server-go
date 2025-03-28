@@ -11,6 +11,7 @@ import (
 func SetupGoogleAuth() {
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	redirectURL := os.Getenv("GOOGLE_CALLBACK_URL")
 
-	goth.UseProviders(google.New(googleClientId, googleClientSecret, "http://localhost:8080/auth/google/callback"))
+	goth.UseProviders(google.New(googleClientId, googleClientSecret, redirectURL))
 }
