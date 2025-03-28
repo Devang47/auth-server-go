@@ -16,6 +16,10 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
+type contextKey string
+
+const AuthProviderKey contextKey = "provider"
+
 func AddGoogleAuthRoutes(rest REST, public chi.Router) {
 	public.Get("/auth/{provider}", rest.loginUserHandler)
 	public.Get("/auth/{provider}/callback", rest.getAuthCallbackHandler)
@@ -24,7 +28,7 @@ func AddGoogleAuthRoutes(rest REST, public chi.Router) {
 
 func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
 
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
@@ -33,21 +37,25 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	account := models.Account{}
+	tokenString := ""
 
-	userId, err := gonanoid.New()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	existingAccount := rest.DB.Where("email = ?", user.Email).First(&account)
 
-	tokenString, err := middlewares.GenerateToken(userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := rest.DB.Where("email = ?", user.Email).First(&account).Error; err != nil {
+	if err := existingAccount.Error; err != nil {
 		log.Printf("Account not found, creating new account")
+
+		userId, err := gonanoid.New()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		tokenString, err = middlewares.GenerateToken(userId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		account = models.Account{
 			UserID:       userId,
 			DisplayName:  strings.Trim(user.FirstName+" "+user.LastName, " "),
@@ -65,6 +73,14 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 		}
 
 	} else {
+		log.Printf("Account found, updating account")
+		tokenString, err = middlewares.GenerateToken(account.UserID)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		account.LastLoggedIn = time.Now().Unix()
 		if err := rest.DB.Save(&account).Error; err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,7 +104,7 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 
 func (rest *REST) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
 
 	if _, err := gothic.CompleteUserAuth(w, r); err != nil {
 		gothic.BeginAuthHandler(w, r)
@@ -97,7 +113,7 @@ func (rest *REST) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 func (rest *REST) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
 
 	gothic.Logout(w, r)
 	w.Header().Set("Location", "/")

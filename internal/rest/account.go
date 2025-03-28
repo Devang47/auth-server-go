@@ -1,11 +1,13 @@
 package rest
 
 import (
-	"auth-server-go/internal/models"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"auth-server-go/internal/middlewares"
+	"auth-server-go/internal/models"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -16,7 +18,7 @@ func AddAccountRoutes(rest REST, public, secureRoutes chi.Router) {
 }
 
 func (rest *REST) getAccountHandler(w http.ResponseWriter, r *http.Request) {
-	accountId := r.Context().Value("accountId").(string)
+	accountId := r.Context().Value(middlewares.AccountIDKey).(string)
 
 	if accountId == "" {
 		http.Error(w, "Account ID is required", http.StatusBadRequest)
