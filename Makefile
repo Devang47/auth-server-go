@@ -52,7 +52,7 @@ itest:
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm -f main
+	@rm -f app
 
 # Live Reload
 

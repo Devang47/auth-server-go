@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -15,7 +16,9 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-const accountIDKey string = "accountId"
+type contextKey string
+
+const AccountIDKey contextKey = "accountId"
 
 func GenerateToken(accountID string) (string, error) {
 	claims := Claims{
@@ -50,10 +53,16 @@ func ProtectHandler(next http.Handler) http.Handler {
 
 		token, claims, err := ValidateToken(tokenString)
 		if err != nil || !token.Valid {
+			if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+				http.Error(w, "Token expired", http.StatusUnauthorized)
+				return
+			}
+
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		r = r.WithContext(context.WithValue(r.Context(), accountIDKey, claims.AccountID))
+
+		r = r.WithContext(context.WithValue(r.Context(), AccountIDKey, claims.AccountID))
 		next.ServeHTTP(w, r)
 	})
 }

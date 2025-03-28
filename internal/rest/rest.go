@@ -34,6 +34,7 @@ func SetupREST(db *gorm.DB) REST {
 
 	// Health check
 	router.Get("/health", rest.GetHealth)
+	router.Get("/refresh-token", rest.RefreshToken)
 
 	public := rest.Router // public routes
 
