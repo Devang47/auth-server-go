@@ -14,4 +14,5 @@ type Account struct {
 	CreatedAt    int64  `json:"createdAt"`
 	LastLoggedIn int64  `json:"lastLoggedIn"`
 	Picture      string `gorm:"type:text" json:"picture"`
+	Password     string `gorm:"type:text" json:"-"`
 }

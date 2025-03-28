@@ -3,7 +3,6 @@ package rest
 import (
 	"auth-server-go/internal/middlewares"
 	"auth-server-go/internal/models"
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,20 +15,13 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
-type contextKey string
-
-const AuthProviderKey contextKey = "provider"
-
 func AddGoogleAuthRoutes(rest REST, public chi.Router) {
-	public.Get("/auth/{provider}", rest.loginUserHandler)
-	public.Get("/auth/{provider}/callback", rest.getAuthCallbackHandler)
-	public.Get("/logout/{provider}", rest.logoutHandler)
+	public.Get("/auth/google", rest.loginUserHandler)
+	public.Get("/auth/google/callback", rest.getAuthCallbackHandler)
+	public.Get("/logout/google", rest.logoutHandler)
 }
 
 func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
-
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		fmt.Fprintln(w, err)
@@ -61,7 +53,7 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 			DisplayName:  strings.Trim(user.FirstName+" "+user.LastName, " "),
 			Name:         user.Name,
 			Email:        user.Email,
-			Provider:     provider,
+			Provider:     "google",
 			Picture:      user.AvatarURL,
 			CreatedAt:    time.Now().Unix(),
 			LastLoggedIn: time.Now().Unix(),
@@ -103,18 +95,12 @@ func (rest *REST) getAuthCallbackHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (rest *REST) loginUserHandler(w http.ResponseWriter, r *http.Request) {
-	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
-
 	if _, err := gothic.CompleteUserAuth(w, r); err != nil {
 		gothic.BeginAuthHandler(w, r)
 	}
 }
 
 func (rest *REST) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	provider := chi.URLParam(r, "provider")
-	r = r.WithContext(context.WithValue(context.Background(), AuthProviderKey, provider))
-
 	gothic.Logout(w, r)
 	w.Header().Set("Location", "/")
 	w.WriteHeader(http.StatusTemporaryRedirect)

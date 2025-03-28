@@ -6,24 +6,47 @@ This is a simple auth server written in Go. It uses a Postgres database to store
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
+## Features
+
+- Password based authentication
+- Google OAuth2 authentication
+- JWT token generation, validation and refresh
+- User account creation and management
+- Rate limiting
+- Docker support for Postgres database
+
 ## Routes
 
-- `/` - Home
+- GET `/` - Home
   @returns `auth-server-go`
 
-- `/health` - Get Health
+- GET `/health` - Get Health
   @returns `OK`
 
-- `/auth/google` - Google OAuth2 route, starts auth flow
+- GET `/refresh-token` - Refresh token
+  @header `Authorization: Bearer {token}`
+  @returns `{token}`
+
+- GET `/auth/google` - Google OAuth2 route, starts auth flow
   @returns `{token, account}`
 
-- `/logout` - Logout
+- POST `/auth/register` - Register a new user
+  @body `{email, password}`
+  @returns `{token, account}`
+
+- POST `/auth/login` - Login with email and password
+  @body `{email, password}`
+  @returns `{token, account}`
+
+- GET `/logout` - Logout
   @redirects to `/`
 
-- `/account` - Get current user account from DB
+- GET `/secure/account` - Get current user account from DB
+  @header `Authorization: Bearer {token}`
   @returns `Account{}`
 
-- `/secure/account/{id}` - Get account from DB using accountId
+- GET `/secure/account/{id}` - Get account from DB using accountId
+  @header `Authorization: Bearer {token}`
   @returns `Account{}`
 
 ## MakeFile
